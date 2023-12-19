@@ -22,6 +22,7 @@ public class CsvController {
     public ResponseEntity<String> postCsvFile(@RequestParam(value = "date-pattern") String datePattern,
                                       @NotNull @RequestParam(value = "file") MultipartFile file) throws CsvException {
         csvService.save(file);
+        csvService.read(datePattern);
 
         return ResponseEntity.ok("File read");
     }
