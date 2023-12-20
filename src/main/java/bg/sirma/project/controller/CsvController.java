@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/csv")
 public class CsvController {
@@ -19,11 +21,11 @@ public class CsvController {
     }
 
     @PostMapping
-    public ResponseEntity<String> postCsvFile(@RequestParam(value = "date-pattern") String datePattern,
+    public ResponseEntity<List<String>> postCsvFile(@RequestParam(value = "date-pattern") String datePattern,
                                       @NotNull @RequestParam(value = "file") MultipartFile file) throws CsvException {
         csvService.save(file);
-        csvService.read(datePattern);
+        List<String> exceptions = csvService.read(datePattern);
 
-        return ResponseEntity.ok("File read");
+        return ResponseEntity.ok(exceptions);
     }
 }

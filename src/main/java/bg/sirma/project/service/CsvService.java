@@ -1,6 +1,8 @@
 package bg.sirma.project.service;
 
 import bg.sirma.project.exception.CsvException;
+import bg.sirma.project.exception.EmployeeProjectException;
+import bg.sirma.project.model.EmployeeProject;
 import bg.sirma.project.utils.MyDateValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,53 +16,68 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Service
 public class CsvService {
     private final MyDateValidator dateValidator;
+    private final EmployeeProjectService employeeProjectService;
     private static final String PATH = "src/main/java/bg/sirma/project/temp/";
     private static String fileName = "";
 
     @Autowired
-    public CsvService(MyDateValidator dateValidator) {
+    public CsvService(MyDateValidator dateValidator, EmployeeProjectService employeeProjectService) {
         this.dateValidator = dateValidator;
+        this.employeeProjectService = employeeProjectService;
     }
 
-    public void read(String pattern) throws CsvException {
+    public List<String> read(String pattern) throws CsvException {
+        List<String> exceptions = new ArrayList<>();
         try (BufferedReader reader = Files.newBufferedReader(Path.of(PATH + fileName))) {
             String line = reader.readLine();
+            int row = 1;
             while (line != null) {
                 String[] data = line.split("\\s*,\\s*");
-                int employeeId = Integer.parseInt(data[0]);
-                int projectId = Integer.parseInt(data[1]);
-                String startDateString = data[2];
-                LocalDate startDate;
-                if (dateValidator.isValid(startDateString, pattern)) {
-                    startDate = LocalDate.parse(startDateString);
-                } else {
-                    throw new CsvException(String.format("Must enter valid startDate with pattern - %s", pattern));
+                try {
+                    int employeeId = Integer.parseInt(data[0]);
+                    int projectId = Integer.parseInt(data[1]);
+                    String startDateString = data[2];
+                    LocalDate startDate;
+                    if (dateValidator.isValid(startDateString, pattern)) {
+                        startDate = LocalDate.parse(startDateString);
+                    } else {
+                        throw new CsvException(String.format("Must enter valid startDate with pattern - %s", pattern));
+                    }
+
+                    String endDateString = data[3];
+                    LocalDate endDate;
+                    if (!endDateString.equals("NULL") && dateValidator.isValid(endDateString, pattern)) {
+                        endDate = LocalDate.parse(data[3]);
+                    } else if (endDateString.equals("NULL")) {
+                        endDate = null;
+                    } else {
+                        throw new CsvException(String.format("Must enter valid endDate with pattern - %s", pattern));
+                    }
+
+                    employeeProjectService.create(employeeId, projectId, startDate, endDate);
+                } catch (NumberFormatException e) {
+                    exceptions.add(String.format("Must contain valid ID for employee and project at row %d", row));
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    exceptions.add(String.format("Could not parse data at row %d. Valid is `employeeId,projectId,startDate,endDate(NULL)`", row));
+                } catch (CsvException | EmployeeProjectException e) {
+                    exceptions.add(e.getMessage());
                 }
 
-                String endDateString = data[3];
-                LocalDate endDate;
-                if (!endDateString.equals("NULL") && dateValidator.isValid(endDateString, pattern)) {
-                    endDate = LocalDate.parse(data[3]);
-                } else if (endDateString.equals("NULL")) {
-                    endDate = LocalDate.now();
-                } else {
-                    throw new CsvException(String.format("Must enter valid endDate with pattern - %s", pattern));
-                }
-
-                System.out.printf("%d-%d-%s-%s%n", employeeId, projectId, startDate, endDate);
-
+                row++;
                 line = reader.readLine();
             }
         } catch (IOException e) {
             throw new CsvException("Could not parse data. Valid is `employeeId,projectId,startDate,endDate(NULL)`");
-        } catch (NumberFormatException e) {
-            throw new CsvException("Must contain valid ID for employee and project");
         }
+
+        return exceptions;
     }
 
     public void save(MultipartFile file) throws CsvException {
