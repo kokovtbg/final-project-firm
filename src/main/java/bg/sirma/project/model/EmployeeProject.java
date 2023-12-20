@@ -1,14 +1,15 @@
 package bg.sirma.project.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "employee_projects")
 public class EmployeeProject {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     @Column(nullable = false)
     private int employeeId;
     @Column(nullable = false)
