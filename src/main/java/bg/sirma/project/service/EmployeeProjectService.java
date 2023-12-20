@@ -27,8 +27,22 @@ public class EmployeeProjectService {
         EmployeeProject employeeProjectFromDb = employeeProjectRepository
                 .findByEmployeeIdAndProjectId(employeeProject.getEmployeeId(),
                         employeeProject.getProjectId());
+        if (employeeProjectFromDb == null) {
+            return;
+        }
+
         LocalDate startDateFromDB = employeeProjectFromDb.getStartDate();
         LocalDate endDateFromDB = employeeProjectFromDb.getEndDate();
+        if ((employeeProject.getEndDate() != null && employeeProject.getEndDate().isBefore(employeeProject.getStartDate())) ||
+                (employeeProject.getEndDate() != null && employeeProject.getEndDate().isEqual(employeeProject.getStartDate()))) {
+            throw new EmployeeProjectException("End date must be after start date");
+        }
+
+        if (employeeProject.getStartDate().isAfter(LocalDate.now()) ||
+                (employeeProject.getEndDate() != null && employeeProject.getEndDate().isAfter(LocalDate.now()))) {
+            throw new EmployeeProjectException("Dates must be before today");
+        }
+
         if (startDateFromDB.isEqual(employeeProject.getStartDate()) ||
                 endDateFromDB.isEqual(employeeProject.getEndDate())) {
             throw new EmployeeProjectException(String

@@ -1,6 +1,7 @@
 package bg.sirma.project.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PastOrPresent;
 
 import java.time.LocalDate;
 
@@ -15,6 +16,7 @@ public class EmployeeProject {
     @Column(nullable = false)
     private int projectId;
     @Column(nullable = false)
+    @PastOrPresent
     private LocalDate startDate;
     private LocalDate endDate;
 
@@ -26,6 +28,14 @@ public class EmployeeProject {
         this.projectId = projectId;
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getEmployeeId() {

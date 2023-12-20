@@ -67,7 +67,7 @@ public class CsvService {
                 } catch (ArrayIndexOutOfBoundsException e) {
                     exceptions.add(String.format("Could not parse data at row %d. Valid is `employeeId,projectId,startDate,endDate(NULL)`", row));
                 } catch (CsvException | EmployeeProjectException e) {
-                    exceptions.add(e.getMessage());
+                    exceptions.add(e.getMessage() + " at row " + row);
                 }
 
                 row++;
