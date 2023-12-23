@@ -2,6 +2,7 @@ package bg.sirma.project.service;
 
 import bg.sirma.project.exception.EmployeeProjectException;
 import bg.sirma.project.model.EmployeeProject;
+import bg.sirma.project.model.EmployeeProjectProjection;
 import bg.sirma.project.repository.EmployeeProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,10 @@ public class EmployeeProjectService {
         EmployeeProject employeeProject = new EmployeeProject(employeeId, projectId, startDate, endDate);
         validateRecord(employeeProject);
         employeeProjectRepository.save(employeeProject);
+    }
+
+    public EmployeeProjectProjection getMaxDuration() {
+        return employeeProjectRepository.maxDuration();
     }
 
     private void validateRecord(EmployeeProject employeeProject) throws EmployeeProjectException {
